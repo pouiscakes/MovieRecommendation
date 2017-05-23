@@ -14,5 +14,4 @@
     
 2. Item-Based Collaborative Filtering Algorithm 
 
-3. Custom algorithm
-  Implement various heuristics to improve recommendation performance
+3. Custom algorithm using various heuristics to improve recommendation performance
