@@ -44,6 +44,8 @@ def weighted_average(movie, neighbors, ratings):
         if score > 0:
             sum += score
             count += 1
+    if count == 0:
+        return 4
     avg = sum / count
     return avg
 
@@ -54,7 +56,7 @@ print neighbors
 
 
 
-movie = 7
+movie = 992
 for neighbor in neighbors:
     print ratings[neighbor]#[movie]
 
