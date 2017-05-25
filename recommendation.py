@@ -92,7 +92,6 @@ def get_neighbors(n, index, ratings, similarity):
     print "cos sims: ", heapq.nlargest(n, (s for s in sim_list))
     return indexes
 
-
 def weighted_average(movie, neighbors, ratings):
     sum = 0
     count = 0
@@ -102,6 +101,7 @@ def weighted_average(movie, neighbors, ratings):
             sum += score
             count += 1
     if count == 0:
+        print "NOOOOOOO"
         return 4
     avg = sum / count
     return int(round(avg))
@@ -166,6 +166,10 @@ ratings = add_test(inFile, ratings)
 # print neighbors
 
 write_result(ratings, inFile, outFile);
+# WEIGHTED AVERAGE ISNT WEIGHTED! CURRENTLY USING SIMPLE AVERAGE
+# LOG SCALE HIGHER DIMENSION NEIGHBORS HIGHER
+# ADDRESS NOOOOOO?
+
 
 # n = 10
 # sim_list = []
