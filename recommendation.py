@@ -2,6 +2,7 @@
 import numpy as np
 import heapq
 import math
+from math import sqrt
 
 
 #  return a 2D matrix of user ratings: l[user][rating]
@@ -72,6 +73,28 @@ def calculate_cosine_similarity(v1, v2):
     except ZeroDivisionError:
         return 0.5
 
+def calculate_pearson_similarity(p1, p2):
+    si = {}
+    for item in p1:
+        if item in p2:
+            si[item] = 1
+
+    if len(si) == 0:
+        return 0
+
+    n = len(si)
+    sum1 = sum([p1[it] for it in si])
+    sum2 = sum([p2[it] for it in si])
+    sum1Sq = sum([pow(p1[it], 2) for it in si])
+    sum2Sq = sum([pow(p2[it], 2) for it in si])
+    pSum = sum([p1[it] * p2[it] for it in si])
+    num = pSum - sum1 * sum2 / n
+    den = sqrt((sum1Sq - pow(sum1, 2) / n) * (sum2Sq - pow(sum2, 2) / n))
+    if den == 0:
+        return 0
+    r = num / den
+    return r
+
 
 #  return indexes of the nearest n neighbors based on given similarity algorithm
 def get_neighbors(n, index, ratings, return_positives, similarity):
@@ -90,16 +113,33 @@ def get_neighbors(n, index, ratings, return_positives, similarity):
     if return_positives:  # return greatest positive values or greatest negative values
         indexes.reverse()
     print "cos sims: ", heapq.nlargest(n, (s for s in sim_list))
+    #   print out how many movies rated that users have in common
+    # for i in indexes:
+    #     common = 0
+    #     print 'index: ', i
+    #     for s in range(0, len(ratings[i])):
+    #         if ratings[i][s] != '0' and ratings[index][s] != '0':
+    #             # print ratings[i][s]
+    #             # print ratings[index][s]
+    #             common += 1
+    #     print 'common: ', common
     return indexes
 
-def weighted_average(movie, neighbors, ratings):
+
+def weighted_average(movie, neighbors, ratings, at_user):
+    if 299 < at_user < 400:
+        at_user -= 100
+    elif 399 < at_user < 500:
+        at_user -= 200
+
     sum = 0
     count = 0
     for neighbor in neighbors:
         score = map(float, ratings[neighbor][movie])[0]
         if score > 0:
-            sum += score
-            count += 1
+            cos_sim = calculate_cosine_similarity(ratings[at_user], ratings[neighbor])
+            sum += score * cos_sim
+            count += cos_sim
     if count == 0:
         print "NOOOOOOO"
         return 4
@@ -140,7 +180,8 @@ def write_result(ratings, inFile, outFile):
                 neighbors = get_neighbors(20, user, ratings, True, similarity=calculate_cosine_similarity)
                 print neighbors
                 at_user = user;
-            rows[i][2] = str(weighted_average(movie, neighbors, ratings))
+            # rows[i][2] = str(pearson_prediction(movie, neighbors, ratings, at_user))  # pearson similarity
+            rows[i][2] = str(weighted_average(movie, neighbors, ratings, at_user))  # cosine similarity
             print "modified: ", rows[i]
             modified_rows.append(rows[i])
 
