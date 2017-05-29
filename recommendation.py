@@ -73,9 +73,8 @@ def calculate_cosine_similarity(v1, v2):
         return 0.5
 
 
-
 #  return indexes of the nearest n neighbors based on given similarity algorithm
-def get_neighbors(n, index, ratings, similarity):
+def get_neighbors(n, index, ratings, return_positives, similarity):
     if 299 < index < 400:
         index -= 100
     elif 399 < index < 500:
@@ -88,7 +87,8 @@ def get_neighbors(n, index, ratings, similarity):
             sim_list.append(sim)
 
     indexes = sorted(range(len(sim_list)), key=lambda x: sim_list[x])[-n:]
-    indexes.reverse()
+    if return_positives:  # return greatest positive values or greatest negative values
+        indexes.reverse()
     print "cos sims: ", heapq.nlargest(n, (s for s in sim_list))
     return indexes
 
@@ -137,7 +137,7 @@ def write_result(ratings, inFile, outFile):
         elif rating == '0':
             # print "rating is 0"
             if at_user != user:
-                neighbors = get_neighbors(20, user, ratings, similarity=calculate_cosine_similarity)
+                neighbors = get_neighbors(20, user, ratings, True, similarity=calculate_cosine_similarity)
                 print neighbors
                 at_user = user;
             rows[i][2] = str(weighted_average(movie, neighbors, ratings))
@@ -167,8 +167,11 @@ ratings = add_test(inFile, ratings)
 
 write_result(ratings, inFile, outFile);
 # WEIGHTED AVERAGE ISNT WEIGHTED! CURRENTLY USING SIMPLE AVERAGE
-# LOG SCALE HIGHER DIMENSION NEIGHBORS HIGHER
+#   AH BUT EVERYTHING IS BASICALLY .99 COSINE SIM ALREADY
+# LOG SCALE HIGHER DIMENSION NEIGHBORS HIGHER * * *
 # ADDRESS NOOOOOO?
+# FILTER USERS WITH THAT MOVIE FIRST, THEN FIND NEIGHBORS?
+#   BUT THAT WOULD MEAN YOU HAVE TO CALCULATE NEIGHBORS FOR EACH MOVIE
 
 
 # n = 10
