@@ -49,7 +49,7 @@ def add_test(testfile, ratings):
 
 
 #  return cosine similarity between two vectors
-def calculate_cosine_similarity(v1, v2):
+def calculate_cosine_similarity(v1, v2, ratings):
     v1 = map(float, v1)
     v2 = map(float, v2)
     # return np.dot(v1, v2) / (np.sqrt(np.dot(v1, v1)) * np.sqrt(np.dot(v2, v2)))
@@ -82,7 +82,18 @@ def average(x):
     return float(sum) / len(x)
 
 
-def calculate_pearson_similarity(x, y):
+def get_ni():
+    ni_list = []
+    for i in range(len(ratings[0])):
+        ni_list.append(0)
+    ni = 0
+    for user in range(len(ratings)):
+        for movie in range(len(ratings[user])):
+            if ratings[user][movie] != '0':
+                ni_list[movie] += 1
+    return ni_list
+
+def calculate_pearson_similarity(x, y, ratings):
     assert len(x) == len(y)
     n = len(x)
     assert n > 0
@@ -91,12 +102,23 @@ def calculate_pearson_similarity(x, y):
     diffprod = 0
     xdiff2 = 0
     ydiff2 = 0
+
     for idx in range(n):
+        n = len(ratings)
+        ni = ni_list[idx]
+        # print n
+        # print ni
+        if ni == 0:
+            iuf = math.log(300)
+        else:
+            iuf = math.log(n / ni)
+        f2 = iuf * iuf
+
         xdiff = float(x[idx]) - avg_x
         ydiff = float(y[idx]) - avg_y
-        diffprod += xdiff * ydiff
-        xdiff2 += xdiff * xdiff
-        ydiff2 += ydiff * ydiff
+        diffprod += f2 * xdiff * ydiff
+        xdiff2 += f2 * xdiff * xdiff
+        ydiff2 += f2 * ydiff * ydiff
 
     return diffprod / math.sqrt(xdiff2 * ydiff2)
 
@@ -138,22 +160,24 @@ def get_neighbors(n, index, ratings, return_positives, similarity):
     # for r1 in range(0, 200): # test without 201-300
 
         if i != index:
-            sim = similarity(r1, ratings[index])
-            # if(sim > .20):
-            #     print index, ", ", i, ', ', sim
-            #     print ratings[index]
-            #     print r1
+            sim = similarity(r1, ratings[index], ratings)
+            # print index, ", ", i, ', ', sim
+            # print ratings[index]
+            # print r1
             sim_list.append(sim)
         i += 1
 
     indexes = sorted(range(len(sim_list)), key=lambda x: sim_list[x])[-n:]
     if return_positives:  # return greatest positive values or greatest negative values
         indexes.reverse()
-        for ind in range(0, len(indexes)): # fix user >200 index off by 1 error
-            if indexes[ind] >= 200:
-                indexes[ind] += 1
+    for ind in range(0, len(indexes)): # fix user >200 index off by 1 error
+        if indexes[ind] >= 200:
+            indexes[ind] += 1
     print index
+    print indexes
     print "cos sims: ", heapq.nlargest(n, (s for s in sim_list))
+    # print "cos sims: ", heapq.nsmallest(n, (s for s in sim_list))
+
     #   print out how many movies rated that users have in common
     # for i in indexes:
     #     common = 0
@@ -229,15 +253,13 @@ def pearson_prediction(movie, neighbors, ratings, at_user):
     for neighbor in neighbors:
         if ratings[neighbor][movie] != '0':
 
-            wau = calculate_pearson_similarity(ratings[at_user], ratings[neighbor])
-            # print wau
+            wau = calculate_pearson_similarity(ratings[at_user], ratings[neighbor], ratings)
 
             uSum = []
             for rn in ratings[neighbor]:
                 if rn != '0':
                     uSum.append(rn)
             ru = average(uSum)
-            # print ru
 
             rui = float(ratings[neighbor][movie])
             num = wau * (rui - ru)
@@ -302,8 +324,8 @@ def write_result(ratings, inFile, outFile):
     f.close()  # you can omit in most cases as the destructor will call it
 
 #  main
-inFile = 'test20.txt'
-outFile = 'result20.txt'
+inFile = 'test5.txt'
+outFile = 'result5.txt'
 ratings = get_ratings()
 ratings = add_test(inFile, ratings)
 # i = 0
@@ -311,14 +333,19 @@ ratings = add_test(inFile, ratings)
 #     print i, " ", ratings[i]
 #     i += 1
 
+ni_list = get_ni()
+
+
+
+
 # neighbors = get_neighbors(20, 217, ratings, similarity=calculate_cosine_similarity)
 # print neighbors
 
-# print calculate_pearson_similarity(ratings[202], ratings[207])
-# print calculate_pearson_similarity(ratings[202], ratings[269])
-# print calculate_pearson_similarity(ratings[202], ratings[65])
-# print calculate_pearson_similarity(ratings[202], ratings[104])
-# print calculate_pearson_similarity(ratings[202], ratings[164])
+# print calculate_pearson_similarity(ratings[202], ratings[207], ratings)
+# print calculate_pearson_similarity(ratings[202], ratings[269], ratings)
+# print calculate_pearson_similarity(ratings[202], ratings[65], ratings)
+# print calculate_pearson_similarity(ratings[202], ratings[104], ratings)
+# print calculate_pearson_similarity(ratings[202], ratings[164], ratings)
 
 
 write_result(ratings, inFile, outFile);
@@ -328,7 +355,7 @@ write_result(ratings, inFile, outFile);
 # ADDRESS NOOOOOO?
 # FILTER USERS WITH THAT MOVIE FIRST, THEN FIND NEIGHBORS?
 #   BUT THAT WOULD MEAN YOU HAVE TO CALCULATE NEIGHBORS FOR EACH MOVIE
-
+# Smooth the average for a user who rates fewer movies, using the general average for that movie
 
 # n = 10
 # sim_list = []
