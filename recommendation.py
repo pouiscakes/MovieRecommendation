@@ -94,6 +94,8 @@ def get_ni():
     return ni_list
 
 def calculate_pearson_similarity(x, y, ratings):
+    # x = [1]
+    # y = [2]
     assert len(x) == len(y)
     n = len(x)
     assert n > 0
@@ -112,7 +114,7 @@ def calculate_pearson_similarity(x, y, ratings):
             iuf = math.log(300)
         else:
             iuf = math.log(n / ni)
-        f2 = iuf * iuf
+        f2 = iuf * iuf  # IUF
 
         xdiff = float(x[idx]) - avg_x
         ydiff = float(y[idx]) - avg_y
@@ -253,6 +255,7 @@ def pearson_prediction(movie, neighbors, ratings, at_user):
         if ratings[neighbor][movie] != '0':
 
             wau = calculate_pearson_similarity(ratings[at_user], ratings[neighbor], ratings)
+            wau = wau * pow(abs(wau), 2.5)
 
             uSum = []
             for rn in ratings[neighbor]:
@@ -323,8 +326,8 @@ def write_result(ratings, inFile, outFile):
     f.close()  # you can omit in most cases as the destructor will call it
 
 #  main
-inFile = 'test5.txt'
-outFile = 'result5.txt'
+inFile = 'test20.txt'
+outFile = 'result20.txt'
 ratings = get_ratings()
 ratings = add_test(inFile, ratings)
 # i = 0
