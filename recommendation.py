@@ -157,7 +157,6 @@ def get_neighbors(n, index, ratings, return_positives, similarity):
     i = 0
     for r1 in ratings:
     # for r1 in range(0, len(ratings)):
-    # for r1 in range(0, 200): # test without 201-300
 
         if i != index:
             sim = similarity(r1, ratings[index], ratings)
