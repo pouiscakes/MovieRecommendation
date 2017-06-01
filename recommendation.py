@@ -4,7 +4,7 @@ import heapq
 import math
 from math import sqrt
 
-
+''' SETUP RATING MATRIX '''
 #  return a 2D matrix of user ratings: l[user][rating]
 def get_ratings():
     matrix = []
@@ -48,6 +48,7 @@ def add_test(testfile, ratings):
     return ratings
 
 
+''' COSINE FUNCTIONS '''
 #  return cosine similarity between two vectors
 def calculate_cosine_similarity(v1, v2, ratings):
     v1 = map(float, v1)
@@ -73,7 +74,30 @@ def calculate_cosine_similarity(v1, v2, ratings):
     except ZeroDivisionError:
         return 0.5
 
+def weighted_average(movie, neighbors, ratings, at_user):
+    if 299 < at_user < 400:
+        at_user -= 100
+    elif 399 < at_user < 500:
+        at_user -= 200
 
+    sum = 0
+    count = 0
+    for neighbor in neighbors:
+        score = map(float, ratings[neighbor][movie])[0]
+        if score > 0:
+            cos_sim = calculate_cosine_similarity(ratings[at_user], ratings[neighbor], ratings)
+            sum += score * cos_sim
+            count += cos_sim
+    print count
+    if count == 0:
+        print "NOOOOOOO"
+        return 4
+    avg = sum / count
+    return int(round(avg))
+    # return avg
+
+
+''' PEARSON FUNCTIONS '''
 def average(x):
     assert len(x) > 0
     sum = 0
@@ -92,6 +116,7 @@ def get_ni():
             if ratings[user][movie] != '0':
                 ni_list[movie] += 1
     return ni_list
+
 
 def calculate_pearson_similarity(x, y, ratings):
     # x = [1]
@@ -123,115 +148,6 @@ def calculate_pearson_similarity(x, y, ratings):
         ydiff2 += f2 * ydiff * ydiff
 
     return diffprod / math.sqrt(xdiff2 * ydiff2)
-
-
-    # si = {}
-    # for item in p1:
-    #     if item in p2:
-    #         si[item] = 1
-    #         print item
-    #
-    # if len(si) == 0:
-    #     return 0
-    #
-    # n = len(si)
-    # sum1 = sum([p1[it] for it in range(0, len(si))])
-    # sum2 = sum([p2[int(it)] for it in si])
-    # sum1Sq = sum([pow(p1[int(it)], 2) for it in si])
-    # sum2Sq = sum([pow(p2[int(it)], 2) for it in si])
-    # pSum = sum([p1[int(it)] * p2[int(it)] for it in si])
-    # num = pSum - sum1 * sum2 / n
-    # den = sqrt((sum1Sq - pow(sum1, 2) / n) * (sum2Sq - pow(sum2, 2) / n))
-    # if den == 0:
-    #     return 0
-    # r = num / den
-    # return r
-
-
-#  return indexes of the nearest n neighbors based on given similarity algorithm
-def get_neighbors(n, index, ratings, return_positives, similarity):
-    if 299 < index < 400:
-        index -= 100
-    elif 399 < index < 500:
-        index -= 200
-
-    sim_list = []
-    i = 0
-    for r1 in ratings:
-    # for r1 in range(0, len(ratings)):
-
-        if i != index:
-            sim = similarity(r1, ratings[index], ratings)
-            # print index, ", ", i, ', ', sim
-            # print ratings[index]
-            # print r1
-            sim_list.append(sim)
-        i += 1
-
-    indexes = sorted(range(len(sim_list)), key=lambda x: sim_list[x])[-n:]
-    if return_positives:  # return greatest positive values or greatest negative values
-        indexes.reverse()
-    for ind in range(0, len(indexes)): # fix user >200 index off by 1 error
-        if indexes[ind] >= 200:
-            indexes[ind] += 1
-    print index
-    print indexes
-    print "cos sims: ", heapq.nlargest(n, (s for s in sim_list))
-    # print "cos sims: ", heapq.nsmallest(n, (s for s in sim_list))
-
-    #   print out how many movies rated that users have in common
-    # for i in indexes:
-    #     common = 0
-    #     print 'index: ', i
-    #     for s in range(0, len(ratings[i])):
-    #         if ratings[i][s] != '0' and ratings[index][s] != '0':
-    #             # print ratings[i][s]
-    #             # print ratings[index][s]
-    #             common += 1
-    #     print 'common: ', common
-    return indexes
-
-
-def get_neighbors_similarites(n, index, ratings, return_positives, similarity):
-    if 299 < index < 400:
-        index -= 100
-    elif 399 < index < 500:
-        index -= 200
-
-    sim_list = []
-    for r1 in range(0, len(ratings)):
-        if r1 != index:
-            sim = similarity(ratings[r1], ratings[index])
-            sim_list.append(sim)
-
-    indexes = sorted(range(len(sim_list)), key=lambda x: sim_list[x])[-n:]
-    if return_positives:  # return greatest positive values or greatest negative values
-        indexes.reverse()
-    cos_sims = heapq.nlargest(n, (s for s in sim_list))
-    # print "cos sims: ", cos_sims
-    return cos_sims
-
-
-def weighted_average(movie, neighbors, ratings, at_user):
-    if 299 < at_user < 400:
-        at_user -= 100
-    elif 399 < at_user < 500:
-        at_user -= 200
-
-    sum = 0
-    count = 0
-    for neighbor in neighbors:
-        score = map(float, ratings[neighbor][movie])[0]
-        if score > 0:
-            cos_sim = calculate_cosine_similarity(ratings[at_user], ratings[neighbor])
-            sum += score * cos_sim
-            count += cos_sim
-    if count == 0:
-        print "NOOOOOOO"
-        return 4
-    avg = sum / count
-    return int(round(avg))
-    # return avg
 
 
 def pearson_prediction(movie, neighbors, ratings, at_user):
@@ -280,7 +196,114 @@ def pearson_prediction(movie, neighbors, ratings, at_user):
     return int(round(pai))
 
 
-def write_result(ratings, inFile, outFile):
+''' USER BASED (COSINE AND PEARSON) FUNCTION '''
+#  return indexes of the nearest n neighbors based on given similarity algorithm
+def get_neighbors(n, index, ratings, return_positives, similarity):
+    if 299 < index < 400:
+        index -= 100
+    elif 399 < index < 500:
+        index -= 200
+
+    sim_list = []
+    i = 0
+    for r1 in ratings:
+    # for r1 in range(0, len(ratings)):
+
+        if i != index:
+            sim = similarity(r1, ratings[index], ratings)
+            # print index, ", ", i, ', ', sim
+            # print ratings[index]
+            # print r1
+            sim_list.append(sim)
+        i += 1
+
+    indexes = sorted(range(len(sim_list)), key=lambda x: sim_list[x])[-n:]
+    if return_positives:  # return greatest positive values or greatest negative values
+        indexes.reverse()
+    for ind in range(0, len(indexes)): # fix user >200 index off by 1 error
+        if indexes[ind] >= 200:
+            indexes[ind] += 1
+    print index
+    print indexes
+    print "cos sims: ", heapq.nlargest(n, (s for s in sim_list))
+    # print "cos sims: ", heapq.nsmallest(n, (s for s in sim_list))
+
+    #   print out how many movies rated that users have in common
+    # for i in indexes:
+    #     common = 0
+    #     print 'index: ', i
+    #     for s in range(0, len(ratings[i])):
+    #         if ratings[i][s] != '0' and ratings[index][s] != '0':
+    #             # print ratings[i][s]
+    #             # print ratings[index][s]
+    #             common += 1
+    #     print 'common: ', common
+    return indexes
+
+
+''' ITEM BASED FUNCTIONS '''
+def avg_rating(x):
+    assert len(x) > 0
+    sum = 0
+    count = 0
+    for element in x:
+        if int(element) > 0:
+            sum += int(element)
+            count += 1
+    return float(sum) / count
+
+def calculate_item_similarity(x, y):
+    sum_num = 0
+    sum_den1 = 0
+    sum_den2 = 0
+    for u in range(300):
+        ru = avg_usr_rating[u]
+        rui = float(x[u])
+        ruj = float(y[u])
+        if rui != 0 and ruj != 0 and rui != ruj:
+            sum_num += (rui - ru) * (ruj - ru)
+            sum_den1 += (rui - ru) * (rui - ru)
+            sum_den2 += (ruj - ru) * (ruj - ru)
+    den = sqrt(sum_den1) * sqrt(sum_den2)
+    if den == 0:
+        # print 'den = 0'
+        return 0.01
+    sim = abs(sum_num / den)
+    if sim == 1:
+        # print 'sim == 1'
+        return 0.02
+    else:
+        return sim
+
+def item_prediction(movie, at_user):
+    if 299 < at_user < 400:
+        at_user -= 100
+    elif 399 < at_user < 500:
+        at_user -= 200
+
+    sum_num = 0
+    sum_den = 0
+    for j in range(len(ratings[at_user])):
+        if ratings[at_user][j] != '0':
+            # j = int(j)
+            wij = float(item_matrix[movie][j])
+            # print 'wij: ', wij
+            # print at_user, j
+            raj = int(ratings[at_user][j])
+            # raj = avg_rating(trans[j])
+            # print raj
+            sum_num += wij * raj
+            sum_den += wij
+    if sum_den != 0:
+        pai = sum_num / sum_den
+    else:
+        pai = avg_usr_rating[at_user]
+    return int(round(pai))
+
+
+''' GENERAL ALGORITHM RESULT FILE '''
+# parse input file and generate ratings for each 0 rating
+def write_result(ratings, inFile, outFile, algorithm):
     input = open(inFile, 'r')
     rows = []
     modified_rows = []
@@ -309,11 +332,20 @@ def write_result(ratings, inFile, outFile):
         elif rating == '0':
             # print "rating is 0"
             if at_user != user:
-                # neighbors = get_neighbors(20, user, ratings, True, similarity=calculate_cosine_similarity)
-                neighbors = get_neighbors(20, user, ratings, True, similarity=calculate_pearson_similarity)
+                if algorithm == 'cosine':
+                    neighbors = get_neighbors(20, user, ratings, True, similarity=calculate_cosine_similarity)
+                elif algorithm == 'pearson':
+                    neighbors = get_neighbors(20, user, ratings, True, similarity=calculate_pearson_similarity)
+                # elif algorithm == 'item':
+                #     neighbors = get_item_neighbors(20, user)
                 at_user = user;
-            # rows[i][2] = str(weighted_average(movie, neighbors, ratings, at_user))  # cosine similarity
-            rows[i][2] = str(pearson_prediction(movie, neighbors, ratings, at_user))  # pearson similarity
+            if algorithm == 'cosine':
+                rows[i][2] = str(weighted_average(movie, neighbors, ratings, at_user))
+            elif algorithm == 'pearson':
+                rows[i][2] = str(pearson_prediction(movie, neighbors, ratings, at_user))
+            elif algorithm == 'item':
+                # rows[i][2] = str(item_prediction(movie, neighbors, ratings, at_user))
+                rows[i][2] = str(item_prediction(movie, at_user))
             print "modified: ", rows[i]
             modified_rows.append(rows[i])
 
@@ -326,8 +358,8 @@ def write_result(ratings, inFile, outFile):
     f.close()  # you can omit in most cases as the destructor will call it
 
 #  main
-inFile = 'test20.txt'
-outFile = 'result20.txt'
+inFile = 'test5.txt'
+outFile = 'result5.txt'
 ratings = get_ratings()
 ratings = add_test(inFile, ratings)
 # i = 0
@@ -335,22 +367,61 @@ ratings = add_test(inFile, ratings)
 #     print i, " ", ratings[i]
 #     i += 1
 
-ni_list = get_ni()
+# def calculate_item_similarity(x, y, trans):
+#     for i in range(x):
+
+
+avg_usr_rating = []
+for user in ratings:
+    avg_usr_rating.append(avg_rating(user))
+
+item_matrix = []
+try:
+    f = open('item_matrix.txt', 'r')
+    item_matrix = [map(str, line.split(',')) for line in f]
+    trans = zip(*ratings)
+
+except IOError:
+    print 'initializing item matrix...'
+    trans = zip(*ratings)
+    for i in range(1000):
+        item_matrix.append([0] * 1000)
+        for j in range(1000):
+            item_matrix[i][j] = calculate_item_similarity(trans[i], trans[j])
+            # item_matrix[i][j] = 1
+            print "calculate_item_similarity: ", i, j
+
+    f = open('item_matrix.txt', 'w')
+    for row in item_matrix:
+        for column in row:
+            line = str(column) + ','
+            f.write(line)
+        f.write('\n')
+    f.close()
+
+
+# write_result(ratings, inFile, outFile, 'cosine');
+# ni_list = get_ni() # for pearson
+# write_result(ratings, inFile, outFile, 'pearson');
+write_result(ratings, inFile, outFile, 'item');
 
 
 
 
-# neighbors = get_neighbors(20, 217, ratings, similarity=calculate_cosine_similarity)
-# print neighbors
-
-# print calculate_pearson_similarity(ratings[202], ratings[207], ratings)
-# print calculate_pearson_similarity(ratings[202], ratings[269], ratings)
-# print calculate_pearson_similarity(ratings[202], ratings[65], ratings)
-# print calculate_pearson_similarity(ratings[202], ratings[104], ratings)
-# print calculate_pearson_similarity(ratings[202], ratings[164], ratings)
 
 
-write_result(ratings, inFile, outFile);
+
+
+
+
+
+
+
+
+
+
+
+
 # WEIGHTED AVERAGE ISNT WEIGHTED! CURRENTLY USING SIMPLE AVERAGE
 #   AH BUT EVERYTHING IS BASICALLY .99 COSINE SIM ALREADY
 # LOG SCALE HIGHER DIMENSION NEIGHBORS HIGHER * * *
