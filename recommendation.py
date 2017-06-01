@@ -68,11 +68,11 @@ def calculate_cosine_similarity(v1, v2, ratings):
     try:
         result = sumxy/math.sqrt(sumxx*sumyy)
         if result == 1.0:
-            return .75
+            return .95
         return result
 
     except ZeroDivisionError:
-        return 0.5
+        return 0.001
 
 def weighted_average(movie, neighbors, ratings, at_user):
     if 299 < at_user < 400:
@@ -399,13 +399,16 @@ except IOError:
         f.write('\n')
     f.close()
 
-
-# write_result(ratings, inFile, outFile, 'cosine');
+# get_neighbors(20, 215, ratings, True, similarity=calculate_cosine_similarity)
+# get_neighbors(20, 216, ratings, True, similarity=calculate_cosine_similarity)
+# get_neighbors(20, 217, ratings, True, similarity=calculate_cosine_similarity)
+write_result(ratings, inFile, outFile, 'cosine');
 # ni_list = get_ni() # for pearson
 # write_result(ratings, inFile, outFile, 'pearson');
-write_result(ratings, inFile, outFile, 'item');
+# write_result(ratings, inFile, outFile, 'item');
 
 
+### calculate neighbors for each rating, not just each user
 
 
 
