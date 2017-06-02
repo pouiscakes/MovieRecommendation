@@ -88,7 +88,7 @@ def weighted_average(movie, neighbors, ratings, at_user):
             cos_sim = calculate_cosine_similarity(ratings[at_user], ratings[neighbor], ratings)
             sum += score * cos_sim
             count += cos_sim
-    print count
+    # print count
     if count == 0:
         print "NOOOOOOO"
         return 4
@@ -198,31 +198,40 @@ def pearson_prediction(movie, neighbors, ratings, at_user):
 
 ''' USER BASED (COSINE AND PEARSON) FUNCTION '''
 #  return indexes of the nearest n neighbors based on given similarity algorithm
-def get_neighbors(n, index, ratings, return_positives, similarity):
+def get_neighbors(n, index, movie, ratings, return_positives, similarity):
     if 299 < index < 400:
         index -= 100
     elif 399 < index < 500:
         index -= 200
 
     sim_list = []
-    i = 0
-    for r1 in ratings:
+    index_list = []
+    # i = 0
+    for r in range(len(ratings)):
     # for r1 in range(0, len(ratings)):
 
-        if i != index:
-            sim = similarity(r1, ratings[index], ratings)
-            # print index, ", ", i, ', ', sim
-            # print ratings[index]
-            # print r1
-            sim_list.append(sim)
-        i += 1
+        if r != index:
+            # print ratings[i][movie]
+            if ratings[r][movie] != '0':
+                # print r
+                sim = similarity(ratings[r], ratings[index], ratings)
+                # print sim
+                # print index, ", ", i, ', ', sim
+                # print ratings[index]
+                # print r1
+                if sim > .5:
+                    sim_list.append(sim)
+                    index_list.append(r)
+                # print sim_list
+        # i += 1
 
-    indexes = sorted(range(len(sim_list)), key=lambda x: sim_list[x])[-n:]
-    if return_positives:  # return greatest positive values or greatest negative values
-        indexes.reverse()
-    for ind in range(0, len(indexes)): # fix user >200 index off by 1 error
-        if indexes[ind] >= 200:
-            indexes[ind] += 1
+    # indexes = sorted(range(len(sim_list)), key=lambda x: sim_list[x])[-n:]
+    # if return_positives:  # return greatest positive values or greatest negative values
+    #     indexes.reverse()
+    # for ind in range(0, len(indexes)): # fix user >200 index off by 1 error
+    #     if indexes[ind] >= 200:
+    #         indexes[ind] += 1
+    indexes = heapq.nlargest(n, (s for s in index_list))
     print index
     print indexes
     print "cos sims: ", heapq.nlargest(n, (s for s in sim_list))
@@ -317,7 +326,7 @@ def write_result(ratings, inFile, outFile, algorithm):
         rows[i][2] = rows[i][2][0]  # remove extra text after rating
     # print rows
 
-    at_user = 0
+    # at_user = 0
 
     for i in range(0, len(rows)):
         user = int(rows[i][0]) - 1
@@ -331,21 +340,22 @@ def write_result(ratings, inFile, outFile, algorithm):
 
         elif rating == '0':
             # print "rating is 0"
-            if at_user != user:
-                if algorithm == 'cosine':
-                    neighbors = get_neighbors(20, user, ratings, True, similarity=calculate_cosine_similarity)
-                elif algorithm == 'pearson':
-                    neighbors = get_neighbors(20, user, ratings, True, similarity=calculate_pearson_similarity)
-                # elif algorithm == 'item':
-                #     neighbors = get_item_neighbors(20, user)
-                at_user = user;
+            # if at_user != user:
             if algorithm == 'cosine':
-                rows[i][2] = str(weighted_average(movie, neighbors, ratings, at_user))
+                neighbors = get_neighbors(25, user, movie, ratings, True, similarity=calculate_cosine_similarity)
             elif algorithm == 'pearson':
-                rows[i][2] = str(pearson_prediction(movie, neighbors, ratings, at_user))
+                neighbors = get_neighbors(20, user, movie, ratings, True, similarity=calculate_pearson_similarity)
+            # elif algorithm == 'item':
+            #     neighbors = get_item_neighbors(20, user)
+
+                # at_user = user;
+            if algorithm == 'cosine':
+                rows[i][2] = str(weighted_average(movie, neighbors, ratings, user))
+            elif algorithm == 'pearson':
+                rows[i][2] = str(pearson_prediction(movie, neighbors, ratings, user))
             elif algorithm == 'item':
                 # rows[i][2] = str(item_prediction(movie, neighbors, ratings, at_user))
-                rows[i][2] = str(item_prediction(movie, at_user))
+                rows[i][2] = str(item_prediction(movie, user))
             print "modified: ", rows[i]
             modified_rows.append(rows[i])
 
@@ -362,14 +372,23 @@ inFile = 'test5.txt'
 outFile = 'result5.txt'
 ratings = get_ratings()
 ratings = add_test(inFile, ratings)
-# i = 0
-# while i < 300:
-#     print i, " ", ratings[i]
-#     i += 1
+write_result(ratings, inFile, outFile, 'cosine');
 
-# def calculate_item_similarity(x, y, trans):
-#     for i in range(x):
+inFile = 'test10.txt'
+outFile = 'result10.txt'
+ratings = get_ratings()
+ratings = add_test(inFile, ratings)
+write_result(ratings, inFile, outFile, 'cosine');
 
+inFile = 'test20.txt'
+outFile = 'result20.txt'
+ratings = get_ratings()
+ratings = add_test(inFile, ratings)
+write_result(ratings, inFile, outFile, 'cosine');
+
+
+# ni_list = get_ni() # for IUF
+# write_result(ratings, inFile, outFile, 'pearson');
 
 avg_usr_rating = []
 for user in ratings:
@@ -399,16 +418,13 @@ except IOError:
         f.write('\n')
     f.close()
 
-# get_neighbors(20, 215, ratings, True, similarity=calculate_cosine_similarity)
-# get_neighbors(20, 216, ratings, True, similarity=calculate_cosine_similarity)
-# get_neighbors(20, 217, ratings, True, similarity=calculate_cosine_similarity)
-write_result(ratings, inFile, outFile, 'cosine');
-# ni_list = get_ni() # for pearson
-# write_result(ratings, inFile, outFile, 'pearson');
 # write_result(ratings, inFile, outFile, 'item');
 
 
-### calculate neighbors for each rating, not just each user
+# get_neighbors(20, 215, 0, ratings, True, similarity=calculate_cosine_similarity)
+# get_neighbors(20, 216, 0, ratings, True, similarity=calculate_cosine_similarity)
+# get_neighbors(20, 217, 0, ratings, True, similarity=calculate_cosine_similarity)
+# print calculate_cosine_similarity(ratings[217], ratings[157], ratings)
 
 
 
