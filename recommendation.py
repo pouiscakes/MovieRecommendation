@@ -342,7 +342,7 @@ def write_result(ratings, inFile, outFile, algorithm):
             # print "rating is 0"
             # if at_user != user:
             if algorithm == 'cosine':
-                neighbors = get_neighbors(25, user, movie, ratings, True, similarity=calculate_cosine_similarity)
+                neighbors = get_neighbors(30, user, movie, ratings, True, similarity=calculate_cosine_similarity)
             elif algorithm == 'pearson':
                 neighbors = get_neighbors(20, user, movie, ratings, True, similarity=calculate_pearson_similarity)
             # elif algorithm == 'item':
@@ -385,6 +385,18 @@ outFile = 'result20.txt'
 ratings = get_ratings()
 ratings = add_test(inFile, ratings)
 write_result(ratings, inFile, outFile, 'cosine');
+
+''' Tasks:
+1. implement CA to cosine
+2. implement IUF to cosine
+3. run pearson test
+
+'''
+
+
+
+
+
 
 
 # ni_list = get_ni() # for IUF
