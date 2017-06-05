@@ -86,8 +86,8 @@ def weighted_average(movie, neighbors, ratings, at_user):
         score = map(float, ratings[neighbor][movie])[0]
         if score > 0:
             cos_sim = calculate_cosine_similarity(ratings[at_user], ratings[neighbor], ratings)
-            sum += score * cos_sim
-            count += cos_sim
+            sum += score * cos_sim * pow(abs(cos_sim), 2.5)
+            count += cos_sim * pow(abs(cos_sim), 2.5)
     # print count
     if count == 0:
         print "NOOOOOOO"
@@ -146,7 +146,6 @@ def calculate_pearson_similarity(x, y, ratings):
         diffprod += f2 * xdiff * ydiff
         xdiff2 += f2 * xdiff * xdiff
         ydiff2 += f2 * ydiff * ydiff
-
     return diffprod / math.sqrt(xdiff2 * ydiff2)
 
 
@@ -171,7 +170,7 @@ def pearson_prediction(movie, neighbors, ratings, at_user):
         if ratings[neighbor][movie] != '0':
 
             wau = calculate_pearson_similarity(ratings[at_user], ratings[neighbor], ratings)
-            wau = wau * pow(abs(wau), 2.5)
+            wau = wau # * pow(abs(wau), 1.5)
 
             uSum = []
             for rn in ratings[neighbor]:
@@ -219,7 +218,8 @@ def get_neighbors(n, index, movie, ratings, return_positives, similarity):
                 # print index, ", ", i, ', ', sim
                 # print ratings[index]
                 # print r1
-                if sim > .5:
+                # if sim > .5:  ## USE THIS FOR COSINE
+                if sim > .04: ## USE THIS FOR PEARSON
                     sim_list.append(sim)
                     index_list.append(r)
                 # print sim_list
@@ -367,24 +367,24 @@ def write_result(ratings, inFile, outFile, algorithm):
         f.write(line)  # python will convert \n to os.linesep
     f.close()  # you can omit in most cases as the destructor will call it
 
-#  main
-inFile = 'test5.txt'
-outFile = 'result5.txt'
-ratings = get_ratings()
-ratings = add_test(inFile, ratings)
-write_result(ratings, inFile, outFile, 'cosine');
-
-inFile = 'test10.txt'
-outFile = 'result10.txt'
-ratings = get_ratings()
-ratings = add_test(inFile, ratings)
-write_result(ratings, inFile, outFile, 'cosine');
-
-inFile = 'test20.txt'
-outFile = 'result20.txt'
-ratings = get_ratings()
-ratings = add_test(inFile, ratings)
-write_result(ratings, inFile, outFile, 'cosine');
+# #  main
+# inFile = 'test5.txt'
+# outFile = 'result5.txt'
+# ratings = get_ratings()
+# ratings = add_test(inFile, ratings)
+# write_result(ratings, inFile, outFile, 'cosine');
+#
+# inFile = 'test10.txt'
+# outFile = 'result10.txt'
+# ratings = get_ratings()
+# ratings = add_test(inFile, ratings)
+# write_result(ratings, inFile, outFile, 'cosine');
+#
+# inFile = 'test20.txt'
+# outFile = 'result20.txt'
+# ratings = get_ratings()
+# ratings = add_test(inFile, ratings)
+# write_result(ratings, inFile, outFile, 'cosine');
 
 ''' Tasks:
 1. implement CA to cosine
@@ -393,14 +393,31 @@ write_result(ratings, inFile, outFile, 'cosine');
 
 '''
 
+inFile = 'test5.txt'
+outFile = 'result5.txt'
+ratings = get_ratings()
+ratings = add_test(inFile, ratings)
+ni_list = get_ni() # for IUF
+write_result(ratings, inFile, outFile, 'pearson');
 
+inFile = 'test10.txt'
+outFile = 'result10.txt'
+ratings = get_ratings()
+ratings = add_test(inFile, ratings)
+ni_list = get_ni() # for IUF
+write_result(ratings, inFile, outFile, 'pearson');
 
-
-
+inFile = 'test20.txt'
+outFile = 'result20.txt'
+ratings = get_ratings()
+ratings = add_test(inFile, ratings)
+ni_list = get_ni() # for IUF
+write_result(ratings, inFile, outFile, 'pearson');
 
 
 # ni_list = get_ni() # for IUF
 # write_result(ratings, inFile, outFile, 'pearson');
+
 
 avg_usr_rating = []
 for user in ratings:
