@@ -204,7 +204,7 @@ def get_neighbors(n, index, movie, ratings, return_positives, similarity):
             if ratings[r][movie] != '0':
                 sim = similarity(ratings[r], ratings[index], ratings)
                 # if sim > .5:  ## USE THIS FOR COSINE
-                if sim > 0: ## USE THIS FOR CUSTOM PEARSON
+                if sim > .007: ## USE THIS FOR CUSTOM PEARSON
                     sim_list.append(sim)
                     index_list.append(r)
 
@@ -300,7 +300,7 @@ def write_result(ratings, inFile, outFile, algorithm):
             if algorithm == 'cosine':
                 neighbors = get_neighbors(30, user, movie, ratings, True, similarity=calculate_cosine_similarity)
             elif algorithm == 'pearson':
-                neighbors = get_neighbors(20, user, movie, ratings, True, similarity=calculate_pearson_similarity)
+                neighbors = get_neighbors(41, user, movie, ratings, True, similarity=calculate_pearson_similarity)
 
             if algorithm == 'cosine':
                 rows[i][2] = str(weighted_average(movie, neighbors, ratings, user))
